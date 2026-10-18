@@ -3,6 +3,9 @@
     "name": "blasts",
     "main": "src/index.ts",
     "compatibility_date": "2026-10-18",
+    "secrets": {
+        "required": ["AUTH_USERNAME", "AUTH_PASSWORD"],
+    },
     "routes": [
         {
             "pattern": "blasts.aspiz.uk",

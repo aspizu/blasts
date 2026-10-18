@@ -1,3 +1,4 @@
+import {basicAuth} from "hono/basic-auth"
 import {HTTPException} from "hono/http-exception"
 
 import api from "#api/index"
@@ -21,5 +22,14 @@ export default hono()
             throw new HTTPException(429, {message: "Rate limit exceeded"})
         }
         await next()
+    })
+    .use("/blasts/*", (c, next) => {
+        if (c.req.method === "GET" || c.req.method === "HEAD") {
+            return next()
+        }
+        return basicAuth({
+            username: c.env.AUTH_USERNAME,
+            password: c.env.AUTH_PASSWORD,
+        })(c, next)
     })
     .route("/", api)
