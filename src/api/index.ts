@@ -43,7 +43,7 @@ export default hono()
             INSERT INTO blasts (id, text, published_at, updated_at)
             VALUES (${id}, ${text}, ${timestamp}, ${timestamp})
         `.run()
-        c.header("Location", `/blasts/${id}/`)
+        c.header("Location", `/blasts/${id}`)
         return c.json(blast, 201)
     })
     .get("/blasts/:id", zValidator("param", params), async (c) => {
