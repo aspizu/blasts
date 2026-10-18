@@ -1,5 +1,4 @@
 import {generateRssFeed} from "feedsmith"
-import {html} from "hono/html"
 
 import hono from "#utils/hono"
 import sql from "#utils/sql"
@@ -17,7 +16,7 @@ export default hono().get("/rss.xml", async (c) => {
     }>()
     const {origin} = new URL(c.req.url)
     const feed = generateRssFeed({
-        title: "Blasts",
+        title: c.env.FEED_TITLE,
         description: "Latest blasts",
         link: `${origin}/blasts/`,
         atom: {
@@ -32,7 +31,6 @@ export default hono().get("/rss.xml", async (c) => {
         items: results.map((blast) => ({
             title: blast.text.trim() || "Blast",
             link: `${origin}/blasts/${blast.id}`,
-            description: (html`${blast.text}` as string).toString(),
             guid: {value: blast.id, isPermaLink: false},
             pubDate: new Date(blast.published_at),
         })),
