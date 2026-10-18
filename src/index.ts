@@ -12,10 +12,7 @@ export default hono()
         throw err
     })
     .use("*", async (c, next) => {
-        if (c.req.method !== "GET" && c.req.method !== "HEAD") {
-            return next()
-        }
-        const {success} = await c.env.READ_RATELIMIT.limit({
+        const {success} = await c.env.RATELIMIT.limit({
             key: c.req.header("cf-connecting-ip") ?? "unknown",
         })
         if (!success) {
@@ -30,17 +27,6 @@ export default hono()
         return basicAuth({
             username: c.env.AUTH_USERNAME,
             password: c.env.AUTH_PASSWORD,
-            invalidUserMessage: async () => {
-                const {success} = await c.env.AUTH_RATELIMIT.limit({
-                    key: c.req.header("cf-connecting-ip") ?? "unknown",
-                })
-                if (!success) {
-                    throw new HTTPException(429, {
-                        res: c.text("Rate limit exceeded", 429, {"Retry-After": "60"}),
-                    })
-                }
-                return "Unauthorized"
-            },
         })(c, next)
     })
     .route("/", api)
