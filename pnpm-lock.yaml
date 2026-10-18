@@ -166,9 +166,6 @@ importers:
 
   .:
     devDependencies:
-      '@cloudflare/workers-types':
-        specifier: ^5.20261016.1
-        version: 5.20261016.1
       '@types/node':
         specifier: ^26.6.5
         version: 26.6.5
@@ -1222,7 +1219,8 @@ snapshots:
   '@cloudflare/workerd-windows-64@1.20261012.1':
     optional: true
 
-  '@cloudflare/workers-types@5.20261016.1': {}
+  '@cloudflare/workers-types@5.20261016.1':
+    optional: true
 
   '@cspotcode/source-map-support@0.8.1':
     dependencies:

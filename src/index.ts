@@ -1,7 +1,3 @@
-interface Env {
-    DB: D1Database
-}
-
 export default {
     fetch() {
         return new Response(null, {status: 404})

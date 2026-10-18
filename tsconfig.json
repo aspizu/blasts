@@ -19,7 +19,7 @@
         "allowUnreachableCode": false,
         "allowUnusedLabels": false,
         "noEmit": true,
-        "types": ["@cloudflare/workers-types"],
+        "types": ["./worker-configuration.d.ts"],
         "skipLibCheck": true,
         "verbatimModuleSyntax": true
     },
