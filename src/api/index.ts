@@ -3,6 +3,7 @@ import {HTTPException} from "hono/http-exception"
 import * as uuid from "uuid"
 import {z} from "zod"
 
+import rss from "#api/rss"
 import hono from "#utils/hono"
 import sql from "#utils/sql"
 
@@ -13,6 +14,7 @@ const body = z.strictObject({
 const params = z.object({id: z.uuidv7()})
 
 export default hono()
+    .route("/", rss)
     .get("/blasts/", async (c) => {
         const {results} = await sql(c)`
             SELECT * FROM blasts
