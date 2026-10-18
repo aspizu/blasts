@@ -1,0 +1,12 @@
+{
+    "$schema": "node_modules/wrangler/config-schema.json",
+    "name": "blasts",
+    "main": "src/index.ts",
+    "compatibility_date": "2026-10-18",
+    "d1_databases": [
+        {
+            "binding": "DB",
+            "database_name": "blasts",
+        },
+    ],
+}

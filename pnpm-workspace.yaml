@@ -1,0 +1,7 @@
+pmOnFail: warn
+allowBuilds:
+    esbuild: true
+    lefthook: true
+    workerd: true
+minimumReleaseAgeExclude:
+    - oxlint-plugin-aspizuism@1.0.5

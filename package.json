@@ -1,0 +1,38 @@
+{
+    "name": "blasts",
+    "version": "1.0.0",
+    "private": true,
+    "author": {
+        "name": "aspizu",
+        "email": "hi@aspiz.uk",
+        "url": "https://aspiz.uk"
+    },
+    "type": "module",
+    "scripts": {
+        "dev": "wrangler dev",
+        "deploy": "wrangler deploy",
+        "typecheck": "tsc --noEmit",
+        "fmt": "oxfmt",
+        "fmt:check": "oxfmt --check",
+        "lint": "oxlint",
+        "lint:fix": "oxlint --fix"
+    },
+    "devDependencies": {
+        "@cloudflare/workers-types": "^5.20261016.1",
+        "@types/node": "^26.6.5",
+        "lefthook": "^2.2.0",
+        "oxfmt": "^0.72.0",
+        "oxlint": "^1.87.0",
+        "oxlint-plugin-aspizuism": "1.0.5",
+        "oxlint-tsgolint": "^7.0.2003",
+        "typescript": "^7.0.2",
+        "wrangler": "^4.151.1"
+    },
+    "devEngines": {
+        "packageManager": {
+            "name": "pnpm",
+            "version": "^12.5.1",
+            "onFail": "warn"
+        }
+    }
+}
