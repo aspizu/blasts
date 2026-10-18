@@ -3,10 +3,26 @@
     "name": "blasts",
     "main": "src/index.ts",
     "compatibility_date": "2026-10-18",
+    "routes": [
+        {
+            "pattern": "blasts.aspiz.uk",
+            "custom_domain": true,
+        },
+    ],
     "d1_databases": [
         {
             "binding": "DB",
             "database_name": "blasts",
+        },
+    ],
+    "ratelimits": [
+        {
+            "name": "RATELIMIT",
+            "namespace_id": "962987432",
+            "simple": {
+                "limit": 1000,
+                "period": 10,
+            },
         },
     ],
 }

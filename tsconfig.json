@@ -21,7 +21,11 @@
         "noEmit": true,
         "types": ["./worker-configuration.d.ts"],
         "skipLibCheck": true,
-        "verbatimModuleSyntax": true
+        "verbatimModuleSyntax": true,
+        "paths": {
+            "#api/*": ["./src/api/*"],
+            "#utils/*": ["./src/utils/*"]
+        }
     },
     "include": ["**/*.ts", "**/*.tsx"],
     "exclude": ["node_modules", "dist"]
