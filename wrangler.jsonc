@@ -7,7 +7,12 @@
         "directory": "./public",
     },
     "secrets": {
-        "required": ["AUTH_USERNAME", "AUTH_PASSWORD", "FEED_TITLE"],
+        "required": [
+            "AUTH_USERNAME",
+            "AUTH_PASSWORD",
+            "FEED_TITLE",
+            "TELEGRAM_CHAT_ID",
+        ],
     },
     "routes": [
         {

@@ -1,7 +1,9 @@
 import {basicAuth} from "hono/basic-auth"
 import {HTTPException} from "hono/http-exception"
 
-import api from "#api/index"
+import blasts from "#api/blasts"
+import rss from "#api/rss"
+import webhooks from "#api/webhooks"
 import hono from "#utils/hono"
 
 export default hono()
@@ -20,7 +22,7 @@ export default hono()
         }
         return next()
     })
-    .use("/blasts/*", (c, next) => {
+    .use("*", (c, next) => {
         if (c.req.method === "GET" || c.req.method === "HEAD") {
             return next()
         }
@@ -29,4 +31,6 @@ export default hono()
             password: c.env.AUTH_PASSWORD,
         })(c, next)
     })
-    .route("/", api)
+    .route("/", blasts)
+    .route("/", rss)
+    .route("/", webhooks)
