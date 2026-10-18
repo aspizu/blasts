@@ -16,11 +16,14 @@ export async function createBlast(c: Context, text: string, idempotencyKey?: str
     const now = Date.now()
     const id = uuid.v7({msecs: now})
     const timestamp = new Date(now).toISOString()
-    await sql(c)`
+    const {meta} = await sql(c)`
         INSERT INTO blasts (id, text, published_at, updated_at, idempotency_key)
         VALUES (${id}, ${text}, ${timestamp}, ${timestamp}, ${idempotencyKey})
         ON CONFLICT (idempotency_key) DO NOTHING
     `.run()
+    if (meta.changes === 0) {
+        return null
+    }
     return id
 }
 
@@ -41,6 +44,9 @@ export default hono()
     .post("/blasts/", zValidator("json", body), async (c) => {
         const {text} = c.req.valid("json")
         const id = await createBlast(c, text)
+        if (id === null) {
+            throw new HTTPException(500, {message: "Failed to create blast"})
+        }
         const blast = await sql(c)`
             SELECT id, text, published_at, updated_at FROM blasts WHERE id = ${id}
         `.first<{
