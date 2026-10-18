@@ -12,31 +12,19 @@ const body = z.strictObject({
 
 const params = z.object({id: z.uuidv7()})
 
-const query = z.object({
-    before: z.uuidv7().optional(),
-    limit: z.coerce.number().int().min(1).max(100).default(50),
-})
-
 export default hono()
-    .get("/blasts/", zValidator("query", query), async (c) => {
-        const {before, limit} = c.req.valid("query")
+    .get("/blasts/", async (c) => {
         const {results} = await sql(c)`
             SELECT * FROM blasts
-            WHERE id < ${before ?? uuid.MAX}
             ORDER BY id DESC
-            LIMIT ${limit + 1}
+            LIMIT 1000
         `.all<{
             id: string
             text: string
             published_at: string
             updated_at: string
         }>()
-        const blasts = results.slice(0, limit)
-        const lastBlast = blasts.at(-1)
-        if (results.length > limit && lastBlast) {
-            return c.json({blasts, next_cursor: lastBlast.id})
-        }
-        return c.json({blasts, next_cursor: null})
+        return c.json({blasts: results})
     })
     .post("/blasts/", zValidator("json", body), async (c) => {
         const {text} = c.req.valid("json")
