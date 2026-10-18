@@ -3,8 +3,7 @@ import {HTTPException} from "hono/http-exception"
 import * as uuid from "uuid"
 import {z} from "zod"
 
-import rss from "#api/rss"
-import hono from "#utils/hono"
+import hono, {type Context} from "#utils/hono"
 import sql from "#utils/sql"
 
 const body = z.strictObject({
@@ -13,11 +12,22 @@ const body = z.strictObject({
 
 const params = z.object({id: z.uuidv7()})
 
+export async function createBlast(c: Context, text: string, idempotencyKey?: string) {
+    const now = Date.now()
+    const id = uuid.v7({msecs: now})
+    const timestamp = new Date(now).toISOString()
+    await sql(c)`
+        INSERT INTO blasts (id, text, published_at, updated_at, idempotency_key)
+        VALUES (${id}, ${text}, ${timestamp}, ${timestamp}, ${idempotencyKey})
+        ON CONFLICT (idempotency_key) DO NOTHING
+    `.run()
+    return id
+}
+
 export default hono()
-    .route("/", rss)
     .get("/blasts/", async (c) => {
         const {results} = await sql(c)`
-            SELECT * FROM blasts
+            SELECT id, text, published_at, updated_at FROM blasts
             ORDER BY id DESC
             LIMIT 1000
         `.all<{
@@ -30,26 +40,14 @@ export default hono()
     })
     .post("/blasts/", zValidator("json", body), async (c) => {
         const {text} = c.req.valid("json")
-        const now = Date.now()
-        const id = uuid.v7({msecs: now})
-        const timestamp = new Date(now).toISOString()
-        const blast = {
-            id,
-            text,
-            published_at: timestamp,
-            updated_at: timestamp,
-        }
-        await sql(c)`
-            INSERT INTO blasts (id, text, published_at, updated_at)
-            VALUES (${id}, ${text}, ${timestamp}, ${timestamp})
-        `.run()
+        const id = await createBlast(c, text)
         c.header("Location", `/blasts/${id}`)
-        return c.json(blast, 201)
+        return c.json({id}, 201)
     })
     .get("/blasts/:id", zValidator("param", params), async (c) => {
         const {id} = c.req.valid("param")
         const blast = await sql(c)`
-            SELECT * FROM blasts WHERE id = ${id}
+            SELECT id, text, published_at, updated_at FROM blasts WHERE id = ${id}
         `.first<{
             id: string
             text: string
@@ -71,7 +69,7 @@ export default hono()
             const blast = await sql(c)`
                 UPDATE blasts SET text = ${text}, updated_at = ${new Date()}
                 WHERE id = ${id}
-                RETURNING *
+                RETURNING id, text, published_at, updated_at
             `.first<{
                 id: string
                 text: string
