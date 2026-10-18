@@ -20,11 +20,19 @@
     ],
     "ratelimits": [
         {
-            "name": "RATELIMIT",
+            "name": "READ_RATELIMIT",
             "namespace_id": "962987432",
             "simple": {
-                "limit": 1000,
-                "period": 10,
+                "limit": 120,
+                "period": 60,
+            },
+        },
+        {
+            "name": "AUTH_RATELIMIT",
+            "namespace_id": "962987433",
+            "simple": {
+                "limit": 10,
+                "period": 60,
             },
         },
     ],
