@@ -29,17 +29,13 @@ export default hono().get("/rss.xml", async (c) => {
                 },
             ],
         },
-        items: await Promise.all(
-            results.map(async (blast) => {
-                return {
-                    title: blast.text.trim() || "Blast",
-                    link: `${origin}/blasts/${blast.id}`,
-                    description: (await html`${blast.text}`).toString(),
-                    guid: {value: blast.id, isPermaLink: false},
-                    pubDate: new Date(blast.published_at),
-                }
-            }),
-        ),
+        items: results.map((blast) => ({
+            title: blast.text.trim() || "Blast",
+            link: `${origin}/blasts/${blast.id}`,
+            description: (html`${blast.text}` as string).toString(),
+            guid: {value: blast.id, isPermaLink: false},
+            pubDate: new Date(blast.published_at),
+        })),
     })
     c.header("Content-Type", "application/rss+xml; charset=utf-8")
     return c.body(feed)
