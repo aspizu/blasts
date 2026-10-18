@@ -41,8 +41,16 @@ export default hono()
     .post("/blasts/", zValidator("json", body), async (c) => {
         const {text} = c.req.valid("json")
         const id = await createBlast(c, text)
+        const blast = await sql(c)`
+            SELECT id, text, published_at, updated_at FROM blasts WHERE id = ${id}
+        `.first<{
+            id: string
+            text: string
+            published_at: string
+            updated_at: string
+        }>()
         c.header("Location", `/blasts/${id}`)
-        return c.json({id}, 201)
+        return c.json(blast, 201)
     })
     .get("/blasts/:id", zValidator("param", params), async (c) => {
         const {id} = c.req.valid("param")
