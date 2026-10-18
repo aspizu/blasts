@@ -56,7 +56,7 @@ export default hono()
         c.header("Location", `/blasts/${id}/`)
         return c.json(blast, 201)
     })
-    .get("/blasts/:id/", zValidator("param", params), async (c) => {
+    .get("/blasts/:id", zValidator("param", params), async (c) => {
         const {id} = c.req.valid("param")
         const blast = await sql(c)`
             SELECT * FROM blasts WHERE id = ${id}
@@ -72,7 +72,7 @@ export default hono()
         return c.json(blast)
     })
     .put(
-        "/blasts/:id/",
+        "/blasts/:id",
         zValidator("param", params),
         zValidator("json", body),
         async (c) => {
@@ -94,7 +94,7 @@ export default hono()
             return c.json(blast)
         },
     )
-    .delete("/blasts/:id/", zValidator("param", params), async (c) => {
+    .delete("/blasts/:id", zValidator("param", params), async (c) => {
         const {id} = c.req.valid("param")
         const {meta} = await sql(c)`
             DELETE FROM blasts WHERE id = ${id}
