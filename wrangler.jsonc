@@ -7,13 +7,7 @@
         "directory": "./public",
     },
     "secrets": {
-        "required": [
-            "AUTH_USERNAME",
-            "AUTH_PASSWORD",
-            "FEED_TITLE",
-            "TELEGRAM_CHAT_ID",
-            "DISCORD_WEBHOOK_URL",
-        ],
+        "required": ["AUTH_USERNAME", "AUTH_PASSWORD", "FEED_TITLE"],
     },
     "routes": [
         {
