@@ -21,7 +21,11 @@ export default hono().post(
     async (c) => {
         const update = c.req.valid("json")
         const message = update.message ?? update.channel_post
-        if (!message?.text || String(message.chat.id) !== c.env.TELEGRAM_CHAT_ID) {
+        if (
+            !message?.text ||
+            message.text === "/start" ||
+            String(message.chat.id) !== c.env.TELEGRAM_CHAT_ID
+        ) {
             return c.json({ok: true})
         }
         await createBlast(c, message.text, `telegram:update:${update.update_id}`)
