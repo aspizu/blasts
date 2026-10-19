@@ -10,7 +10,7 @@
     "type": "module",
     "scripts": {
         "dev": "wrangler dev",
-        "deploy": "wrangler deploy",
+        "deploy": "wrangler d1 migrations apply DB --remote && wrangler deploy",
         "postinstall": "wrangler types",
         "typecheck": "wrangler types && tsc --noEmit",
         "fmt": "oxfmt",
