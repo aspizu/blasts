@@ -1,0 +1,1 @@
+ALTER TABLE blasts ADD COLUMN link TEXT;

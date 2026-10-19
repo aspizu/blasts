@@ -5,6 +5,7 @@ import {z} from "zod"
 
 import {sendDiscordWebhook} from "#utils/discord"
 import hono, {type Context} from "#utils/hono"
+import {fetchTitle} from "#utils/links"
 import type {Blast} from "#utils/models"
 import sql from "#utils/sql"
 
@@ -14,20 +15,45 @@ const body = z.strictObject({
 
 const params = z.object({id: z.uuidv7()})
 
+export function formatTitle(blast: Blast) {
+    const title = blast.text.trim() || "Blast"
+    if (blast.link) {
+        return `🔗 ${title}`
+    }
+    return title
+}
+
+export async function parseBlast(text: string) {
+    const [link, ...content] = text.split(/\r?\n/u)
+    if (
+        !link ||
+        !/^(?:https?|gopher|gemini):\/\/\S+$/iu.test(link) ||
+        !URL.parse(link)?.hostname
+    ) {
+        return {text, link: null}
+    }
+    let title = content.join("\n").trim()
+    if (!title) {
+        title = (await fetchTitle(link)) || link.replace(/^[a-z]+:\/\//iu, "")
+    }
+    return {text: title, link}
+}
+
 export async function createBlast(c: Context, text: string, idempotencyKey?: string) {
+    const blast = await parseBlast(text)
     const now = Date.now()
     const id = uuid.v7({msecs: now})
     const timestamp = new Date(now).toISOString()
     const {meta} = await sql(c)`
-        INSERT INTO blasts (id, text, published_at, updated_at, idempotency_key)
-        VALUES (${id}, ${text}, ${timestamp}, ${timestamp}, ${idempotencyKey})
+        INSERT INTO blasts (id, text, link, published_at, updated_at, idempotency_key)
+        VALUES (${id}, ${blast.text}, ${blast.link}, ${timestamp}, ${timestamp}, ${idempotencyKey})
         ON CONFLICT (idempotency_key) DO NOTHING
     `.run()
     if (meta.changes === 0) {
         return null
     }
     c.executionCtx.waitUntil(
-        sendDiscordWebhook(c, id, text).catch(() => {
+        sendDiscordWebhook(c, id, blast.text, blast.link).catch(() => {
             console.error("Discord webhook delivery failed")
         }),
     )
@@ -37,7 +63,7 @@ export async function createBlast(c: Context, text: string, idempotencyKey?: str
 export default hono()
     .get("/blasts/", async (c) => {
         const {results} = await sql(c)`
-            SELECT id, text, published_at, updated_at FROM blasts
+            SELECT id, text, link, published_at, updated_at FROM blasts
             ORDER BY id DESC
             LIMIT 1000
         `.all<Blast>()
@@ -50,7 +76,7 @@ export default hono()
             throw new HTTPException(500, {message: "Failed to create blast"})
         }
         const blast = await sql(c)`
-            SELECT id, text, published_at, updated_at FROM blasts WHERE id = ${id}
+            SELECT id, text, link, published_at, updated_at FROM blasts WHERE id = ${id}
         `.first<Blast>()
         c.header("Location", `/blasts/${id}`)
         return c.json(blast, 201)
@@ -58,7 +84,7 @@ export default hono()
     .get("/blasts/:id", zValidator("param", params), async (c) => {
         const {id} = c.req.valid("param")
         const blast = await sql(c)`
-            SELECT id, text, published_at, updated_at FROM blasts WHERE id = ${id}
+            SELECT id, text, link, published_at, updated_at FROM blasts WHERE id = ${id}
         `.first<Blast>()
         if (!blast) {
             throw new HTTPException(404, {message: "Blast not found"})
@@ -72,10 +98,12 @@ export default hono()
         async (c) => {
             const {id} = c.req.valid("param")
             const {text} = c.req.valid("json")
+            const content = await parseBlast(text)
             const blast = await sql(c)`
-                UPDATE blasts SET text = ${text}, updated_at = ${new Date()}
+                UPDATE blasts
+                SET text = ${content.text}, link = ${content.link}, updated_at = ${new Date()}
                 WHERE id = ${id}
-                RETURNING id, text, published_at, updated_at
+                RETURNING id, text, link, published_at, updated_at
             `.first<Blast>()
             if (!blast) {
                 throw new HTTPException(404, {message: "Blast not found"})

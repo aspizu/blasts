@@ -169,6 +169,9 @@ importers:
       '@hono/zod-validator':
         specifier: ^0.9.1
         version: 0.9.1(hono@4.13.13)(zod@4.6.7)
+      entities:
+        specifier: ^7.0.1
+        version: 7.0.1
       feedsmith:
         specifier: ^3.0.1
         version: 3.0.1
