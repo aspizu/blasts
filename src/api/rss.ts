@@ -1,6 +1,7 @@
 import {generateRssFeed} from "feedsmith"
 
 import hono from "#utils/hono"
+import type {Blast} from "#utils/models"
 import sql from "#utils/sql"
 
 export default hono().get("/rss.xml", async (c) => {
@@ -8,12 +9,7 @@ export default hono().get("/rss.xml", async (c) => {
         SELECT * FROM blasts
         ORDER BY id DESC
         LIMIT 1000
-    `.all<{
-        id: string
-        text: string
-        published_at: string
-        updated_at: string
-    }>()
+    `.all<Blast>()
     const {origin} = new URL(c.req.url)
     const feed = generateRssFeed({
         title: c.env.FEED_TITLE,
