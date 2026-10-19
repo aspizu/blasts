@@ -1,11 +1,20 @@
 import type {Context} from "#utils/hono"
 
-export async function sendDiscordWebhook(c: Context, id: string, text: string) {
+export async function sendDiscordWebhook(
+    c: Context,
+    id: string,
+    text: string,
+    externalLink: string | null,
+) {
     const url = new URL(c.env.DISCORD_WEBHOOK_URL)
     url.searchParams.set("wait", "true")
     const link = new URL(`/blasts/${id}`, c.req.url).href
+    let content = text.trim() || link
+    if (externalLink) {
+        content = `🔗 ${externalLink}\n${content}`
+    }
     const payload = {
-        content: (text.trim() || link).slice(0, 2000).replace(/[\uD800-\uDBFF]$/u, ""),
+        content: content.slice(0, 2000).replace(/[\uD800-\uDBFF]$/u, ""),
         allowed_mentions: {parse: []},
     }
     const response = await fetch(url, {

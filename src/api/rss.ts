@@ -1,5 +1,6 @@
 import {generateRssFeed} from "feedsmith"
 
+import {formatTitle} from "#api/blasts"
 import hono from "#utils/hono"
 import type {Blast} from "#utils/models"
 import sql from "#utils/sql"
@@ -25,8 +26,8 @@ export default hono().get("/rss.xml", async (c) => {
             ],
         },
         items: results.map((blast) => ({
-            title: blast.text.trim() || "Blast",
-            link: `${origin}/blasts/${blast.id}`,
+            title: formatTitle(blast),
+            link: blast.link ?? `${origin}/blasts/${blast.id}`,
             guid: {value: blast.id, isPermaLink: false},
             pubDate: new Date(blast.published_at),
         })),
