@@ -6,7 +6,9 @@ export async function sendDiscordWebhook(
     text: string,
     externalLink: string | null,
 ) {
-    const url = new URL(c.env.DISCORD_WEBHOOK_URL)
+    const webhookUrl = c.env.DISCORD_WEBHOOK_URL
+    if (!webhookUrl) return
+    const url = new URL(webhookUrl)
     url.searchParams.set("wait", "true")
     const link = new URL(`/blasts/${id}`, c.req.url).href
     let content = text.trim() || link
