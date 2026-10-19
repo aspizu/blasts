@@ -12,6 +12,7 @@
             "AUTH_PASSWORD",
             "FEED_TITLE",
             "TELEGRAM_CHAT_ID",
+            "DISCORD_WEBHOOK_URL",
         ],
     },
     "routes": [

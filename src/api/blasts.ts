@@ -3,7 +3,9 @@ import {HTTPException} from "hono/http-exception"
 import * as uuid from "uuid"
 import {z} from "zod"
 
+import {sendDiscordWebhook} from "#utils/discord"
 import hono, {type Context} from "#utils/hono"
+import type {Blast} from "#utils/models"
 import sql from "#utils/sql"
 
 const body = z.strictObject({
@@ -24,6 +26,11 @@ export async function createBlast(c: Context, text: string, idempotencyKey?: str
     if (meta.changes === 0) {
         return null
     }
+    c.executionCtx.waitUntil(
+        sendDiscordWebhook(c, id, text).catch(() => {
+            console.error("Discord webhook delivery failed")
+        }),
+    )
     return id
 }
 
@@ -33,12 +40,7 @@ export default hono()
             SELECT id, text, published_at, updated_at FROM blasts
             ORDER BY id DESC
             LIMIT 1000
-        `.all<{
-            id: string
-            text: string
-            published_at: string
-            updated_at: string
-        }>()
+        `.all<Blast>()
         return c.json({blasts: results})
     })
     .post("/blasts/", zValidator("json", body), async (c) => {
@@ -49,12 +51,7 @@ export default hono()
         }
         const blast = await sql(c)`
             SELECT id, text, published_at, updated_at FROM blasts WHERE id = ${id}
-        `.first<{
-            id: string
-            text: string
-            published_at: string
-            updated_at: string
-        }>()
+        `.first<Blast>()
         c.header("Location", `/blasts/${id}`)
         return c.json(blast, 201)
     })
@@ -62,12 +59,7 @@ export default hono()
         const {id} = c.req.valid("param")
         const blast = await sql(c)`
             SELECT id, text, published_at, updated_at FROM blasts WHERE id = ${id}
-        `.first<{
-            id: string
-            text: string
-            published_at: string
-            updated_at: string
-        }>()
+        `.first<Blast>()
         if (!blast) {
             throw new HTTPException(404, {message: "Blast not found"})
         }
@@ -84,12 +76,7 @@ export default hono()
                 UPDATE blasts SET text = ${text}, updated_at = ${new Date()}
                 WHERE id = ${id}
                 RETURNING id, text, published_at, updated_at
-            `.first<{
-                id: string
-                text: string
-                published_at: string
-                updated_at: string
-            }>()
+            `.first<Blast>()
             if (!blast) {
                 throw new HTTPException(404, {message: "Blast not found"})
             }
