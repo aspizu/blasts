@@ -19,7 +19,6 @@
         {
             "binding": "DB",
             "database_name": "blasts",
-            "database_id": "6f636f21-fafd-48ba-8b5a-b435a4c9442c",
             "remote": true,
         },
     ],

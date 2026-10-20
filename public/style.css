@@ -16,6 +16,10 @@ a:hover {
     color: white;
 }
 
+a:visited:hover {
+    background-color: purple;
+}
+
 a:active {
     opacity: 75%;
 }
