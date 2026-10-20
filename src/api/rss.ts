@@ -15,7 +15,7 @@ export default hono().get("/rss.xml", async (c) => {
     const feed = generateRssFeed({
         title: c.env.FEED_TITLE,
         description: "Latest blasts",
-        link: `${origin}/blasts/`,
+        link: `${origin}/`,
         atom: {
             links: [
                 {

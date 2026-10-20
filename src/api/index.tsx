@@ -1,0 +1,69 @@
+import {format, formatDistanceToNow} from "date-fns"
+import {jsxRenderer} from "hono/jsx-renderer"
+
+import {formatTitle} from "#api/blasts"
+import hono from "#utils/hono"
+import type {Blast} from "#utils/models"
+import sql from "#utils/sql"
+
+function _renderBlast(blast: Blast) {
+    const publishedAt = new Date(blast.published_at)
+    let content = <p class="p-name e-content">{formatTitle(blast)}</p>
+    if (blast.link) {
+        content = (
+            <p class="p-name e-content">
+                <a href={blast.link}>{formatTitle(blast)}</a>
+            </p>
+        )
+    }
+    return (
+        <article class="h-entry" id={`blast-${blast.id}`}>
+            <data class="u-url u-uid" value={`#blast-${blast.id}`} />
+            <time
+                class="dt-published"
+                datetime={blast.published_at}
+                title={format(publishedAt, "PPp O")}
+            >
+                {formatDistanceToNow(publishedAt, {addSuffix: true})}
+            </time>
+            <time class="dt-updated" datetime={blast.updated_at} hidden />
+            {content}
+        </article>
+    )
+}
+
+export default hono().get("/", jsxRenderer(), async (c) => {
+    const {results} = await sql(c)`
+        SELECT id, text, link, published_at, updated_at FROM blasts
+        ORDER BY id DESC
+        LIMIT 1000
+    `.all<Blast>()
+    return c.render(
+        <html class="h-feed" lang="en">
+            <head>
+                <meta charset="utf-8" />
+                <meta name="viewport" content="width=device-width, initial-scale=1" />
+                <title class="p-name">{c.env.FEED_TITLE}</title>
+                <link
+                    class="u-url"
+                    rel="canonical"
+                    href={new URL("/", c.req.url).href}
+                />
+                <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
+                <link rel="stylesheet" href="/style.css" />
+                <link
+                    rel="alternate"
+                    type="application/rss+xml"
+                    title={c.env.FEED_TITLE}
+                    href="/rss.xml"
+                />
+            </head>
+            <body>
+                <header>
+                    <a href="/rss.xml">RSS feed</a>
+                </header>
+                <main aria-label="Latest blasts">{results.map(_renderBlast)}</main>
+            </body>
+        </html>,
+    )
+})

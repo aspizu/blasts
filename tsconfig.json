@@ -3,6 +3,8 @@
         "target": "ESNext",
         "module": "ESNext",
         "moduleResolution": "Bundler",
+        "jsx": "react-jsx",
+        "jsxImportSource": "hono/jsx",
         "lib": ["ESNext"],
         "allowImportingTsExtensions": true,
         "resolveJsonModule": true,
