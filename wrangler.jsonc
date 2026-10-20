@@ -19,6 +19,7 @@
         {
             "binding": "DB",
             "database_name": "blasts",
+            "remote": true,
         },
     ],
     "ratelimits": [

@@ -2,6 +2,7 @@ import {basicAuth} from "hono/basic-auth"
 import {HTTPException} from "hono/http-exception"
 
 import blasts from "#api/blasts"
+import index from "#api/index"
 import rss from "#api/rss"
 import webhooks from "#api/webhooks"
 import hono from "#utils/hono"
@@ -31,6 +32,7 @@ export default hono()
             password: c.env.AUTH_PASSWORD,
         })(c, next)
     })
+    .route("/", index)
     .route("/", blasts)
     .route("/", rss)
     .route("/", webhooks)

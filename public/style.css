@@ -1,0 +1,43 @@
+body {
+    font-family: monospace;
+    max-width: 65ch;
+}
+
+a {
+    color: blue;
+}
+
+a:visited {
+    color: purple;
+}
+
+a:hover {
+    background-color: blue;
+    color: white;
+}
+
+a:visited:hover {
+    background-color: purple;
+}
+
+a:active {
+    opacity: 75%;
+}
+
+time {
+    color: gray;
+}
+
+.stale {
+    opacity: 50%;
+}
+
+header {
+    display: flex;
+    justify-content: space-between;
+}
+
+nav {
+    display: flex;
+    gap: 1rem;
+}
