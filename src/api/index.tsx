@@ -1,4 +1,4 @@
-import {format, formatDistanceToNow} from "date-fns"
+import {format, formatDistanceToNow, isBefore, subHours} from "date-fns"
 import {jsxRenderer} from "hono/jsx-renderer"
 
 import {formatTitle} from "#api/blasts"
@@ -8,6 +8,10 @@ import sql from "#utils/sql"
 
 function _renderBlast(blast: Blast) {
     const publishedAt = new Date(blast.published_at)
+    let className = "h-entry"
+    if (isBefore(publishedAt, subHours(new Date(), 12))) {
+        className += " stale"
+    }
     let content = <p class="p-name e-content">{formatTitle(blast)}</p>
     if (blast.link) {
         content = (
@@ -17,8 +21,9 @@ function _renderBlast(blast: Blast) {
         )
     }
     return (
-        <article class="h-entry" id={`blast-${blast.id}`}>
+        <article class={className} id={`blast-${blast.id}`}>
             <data class="u-url u-uid" value={`#blast-${blast.id}`} />
+            {content}
             <time
                 class="dt-published"
                 datetime={blast.published_at}
@@ -27,7 +32,6 @@ function _renderBlast(blast: Blast) {
                 {formatDistanceToNow(publishedAt, {addSuffix: true})}
             </time>
             <time class="dt-updated" datetime={blast.updated_at} hidden />
-            {content}
         </article>
     )
 }
@@ -60,9 +64,20 @@ export default hono().get("/", jsxRenderer(), async (c) => {
             </head>
             <body>
                 <header>
-                    <a href="/rss.xml">RSS feed</a>
+                    <strong>blasts</strong>
+                    <nav>
+                        <a href="https://github.com/aspizu/blasts">GitHub</a>
+                        <a href="/rss.xml">Subscribe</a>
+                    </nav>
                 </header>
-                <main aria-label="Latest blasts">{results.map(_renderBlast)}</main>
+                <main aria-label="Latest blasts">
+                    {results.map((blast, index) => (
+                        <>
+                            {index > 0 && <hr />}
+                            {_renderBlast(blast)}
+                        </>
+                    ))}
+                </main>
             </body>
         </html>,
     )
