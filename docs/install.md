@@ -138,8 +138,8 @@ pnpm exec wrangler secret put MASTODON_ACCESS_TOKEN
 Each command prompts for its value and saves it as a Worker secret.
 
 New blasts will also be posted publicly to that account as plain text, with the
-link on the last line. Messages longer than 500 characters are cut to fit. Both
-settings must be present to enable posting.
+link on the last line. Text is cut to fit the 500-character limit, counting an
+HTTP(S) link as 23 characters. Both settings must be present to enable posting.
 
 ## Deploy from GitHub
 

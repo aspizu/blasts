@@ -9,8 +9,9 @@ function _format(text: string, externalLink: string | null) {
     let content = text.trim()
     let suffix = ""
     if (externalLink) {
+        const link = externalLink.replace(/[\\()]/gu, "\\$&")
         content = `[${content}`
-        suffix = `](${externalLink})`
+        suffix = `](${link})`
     }
     content = content
         .slice(0, Math.max(0, 2000 - suffix.length))
