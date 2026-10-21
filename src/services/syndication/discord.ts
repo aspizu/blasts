@@ -10,8 +10,14 @@ function _format(text: string, externalLink: string | null) {
     let suffix = ""
     if (externalLink) {
         const link = externalLink.replace(/[\\()]/gu, "\\$&")
-        content = `[${content}`
         suffix = `](${link})`
+        let label = ""
+        for (const character of content) {
+            const escaped = character.replace(/[\\[\]]/gu, "\\$&")
+            if (1 + label.length + escaped.length + suffix.length > 2000) break
+            label += escaped
+        }
+        content = `[${label}`
     }
     content = content
         .slice(0, Math.max(0, 2000 - suffix.length))

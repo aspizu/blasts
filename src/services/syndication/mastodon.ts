@@ -5,6 +5,30 @@ function _isConfigured(c: Context) {
     return Boolean(c.env.MASTODON_INSTANCE && c.env.MASTODON_ACCESS_TOKEN)
 }
 
+function _truncate(text: string, limit: number) {
+    let result = ""
+    let length = 0
+    const parts = text.split(/(https?:\/\/[^\s<>]+)/giu)
+    for (const [index, part] of parts.entries()) {
+        let remaining = part
+        if (index % 2 === 1) {
+            const url = part.replace(/[.,!?;:'")\]}]+$/gu, "")
+            if (length + 23 > limit) break
+            result += url
+            length += 23
+            remaining = part.slice(url.length)
+        }
+        for (const character of remaining) {
+            if (length + character.length > limit) {
+                return result
+            }
+            result += character
+            length += character.length
+        }
+    }
+    return result
+}
+
 function _format(text: string, externalLink: string | null) {
     let content = text.trim()
     let suffix = ""
@@ -18,9 +42,7 @@ function _format(text: string, externalLink: string | null) {
             suffix = suffix.slice(0, 500).replace(/[\uD800-\uDBFF]$/u, "")
         }
     }
-    content = content
-        .slice(0, Math.max(0, 500 - suffixLength))
-        .replace(/[\uD800-\uDBFF]$/u, "")
+    content = _truncate(content, Math.max(0, 500 - suffixLength))
     return `${content}${suffix}`
 }
 
