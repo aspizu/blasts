@@ -7,6 +7,28 @@ function _isConfigured(c: Context) {
     return Boolean(c.env.MASTODON_INSTANCE && c.env.MASTODON_ACCESS_TOKEN)
 }
 
+function _trimUrlPunctuation(part: string) {
+    let depth = 0
+    const matchedParentheses = new Set<number>()
+    for (let position = 0; position < part.length; position += 1) {
+        if (part[position] === "(") {
+            depth += 1
+        } else if (part[position] === ")" && depth > 0) {
+            depth -= 1
+            matchedParentheses.add(position)
+        }
+    }
+    let end = part.length
+    while (
+        end > 0 &&
+        /[.,!?;:'")\]}]/u.test(part.charAt(end - 1)) &&
+        !matchedParentheses.has(end - 1)
+    ) {
+        end -= 1
+    }
+    return part.slice(0, end)
+}
+
 function _truncate(text: string, limit: number) {
     let result = ""
     let length = 0
@@ -14,7 +36,7 @@ function _truncate(text: string, limit: number) {
     for (const [index, part] of parts.entries()) {
         let remaining = part
         if (index % 2 === 1) {
-            const url = part.replace(/[.,!?;:'")\]}]+$/gu, "")
+            const url = _trimUrlPunctuation(part)
             if (length + 23 > limit) break
             result += url
             length += 23
