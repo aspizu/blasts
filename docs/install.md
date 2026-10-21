@@ -141,6 +141,32 @@ New blasts will also be posted publicly to that account as plain text, with the
 link on the last line. Text is cut to fit the 500-character limit, counting an
 HTTP(S) link as 23 characters. Both settings must be present to enable posting.
 
+## Bluesky (optional)
+
+Create an [app password](https://bsky.app/settings/app-passwords) for your Bluesky
+account, then save your handle (such as `alice.bsky.social`) and the app password:
+
+```sh
+pnpm exec wrangler secret put BLUESKY_IDENTIFIER
+pnpm exec wrangler secret put BLUESKY_APP_PASSWORD
+```
+
+New blasts from curl and Telegram will also be posted to Bluesky. Both settings
+must be set to enable it. Link blasts include a clickable card. Long posts are
+shortened to fit Bluesky's 300-character limit, with a card linking to the full
+blast. Emoji and combined characters stay intact.
+
+For an account on another host, save its server URL (such as
+`https://pds.example.com`):
+
+```sh
+pnpm exec wrangler secret put BLUESKY_SERVICE_URL
+```
+
+The default is `https://bsky.social`. Posting happens in the background; a failed
+delivery is logged and the blast stays saved. Existing blasts, edits, and
+deletions are not sent to Bluesky.
+
 ## Deploy from GitHub
 
 In your fork, enable [GitHub Actions](https://docs.github.com/en/repositories/managing-your-repositorys-settings-and-features/enabling-features-for-your-repository/managing-github-actions-settings-for-a-repository)

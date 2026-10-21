@@ -8,7 +8,7 @@ Cloudflare Workers.
 Fork the repo and follow the [install guide](docs/install.md) to host your own feed.
 
 Post with curl or a Telegram bot. Optional syndication can send new blasts to a
-Discord channel or a Mastodon account.
+Discord channel, a Mastodon account, or a Bluesky account.
 
 The API accepts `text` and an optional `link` in JSON. The link becomes the RSS
 entry's link, and the text becomes its title. When a link is given, `text` can be
