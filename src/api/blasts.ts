@@ -52,7 +52,7 @@ export async function createBlast(
     if (meta.changes === 0) {
         return null
     }
-    publish(c, id, text, link)
+    publish(c, id, text, link, timestamp)
     return id
 }
 
