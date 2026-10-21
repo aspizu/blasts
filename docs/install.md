@@ -49,6 +49,28 @@ curl --user 'YOUR_USERNAME:YOUR_PASSWORD' \
     https://blasts.example.com/blasts/
 ```
 
+To share a link, send it as a separate JSON field:
+
+```sh
+curl --user 'YOUR_USERNAME:YOUR_PASSWORD' \
+    --header 'Content-Type: application/json' \
+    --data '{"text":"An interesting page","link":"https://example.com/"}' \
+    https://blasts.example.com/blasts/
+```
+
+Omit `text` or set it to `null` to use the page title, for example:
+
+```json
+{"text": null, "link": "https://example.com/"}
+```
+
+Blank text also uses the page title. If no title is found, blasts uses the link
+without its scheme. Without a link, nonblank text is required.
+
+The API stores supplied text as sent and does not extract links from it. Updates
+with `PUT /blasts/:id` use the same JSON fields. Omit `link` or set it to `null` to
+clear it.
+
 ## Telegram (optional)
 
 Create a bot with
@@ -97,6 +119,27 @@ pnpm exec wrangler secret put DISCORD_WEBHOOK_URL
 ```
 
 New blasts will also be sent to that channel.
+
+## Mastodon (optional)
+
+Create an application in your Mastodon account's development settings. Give it
+the `write:statuses` permission and copy its user access token. See the
+[Mastodon API guide](https://docs.joinmastodon.org/client/authorized/) for more
+about user access tokens.
+
+Save your server's full HTTPS URL, such as `https://mastodon.social`, then the
+access token:
+
+```sh
+pnpm exec wrangler secret put MASTODON_INSTANCE
+pnpm exec wrangler secret put MASTODON_ACCESS_TOKEN
+```
+
+Each command prompts for its value and saves it as a Worker secret.
+
+New blasts will also be posted publicly to that account as plain text, with the
+link on the last line. Messages longer than 500 characters are cut to fit. Both
+settings must be present to enable posting.
 
 ## Deploy from GitHub
 

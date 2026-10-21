@@ -1,22 +1,22 @@
 import {format, formatDistanceToNow, isBefore, subHours} from "date-fns"
 import {jsxRenderer} from "hono/jsx-renderer"
 
-import {formatTitle} from "#api/blasts"
 import hono from "#utils/hono"
 import type {Blast} from "#utils/models"
 import sql from "#utils/sql"
 
 function _renderBlast(blast: Blast) {
     const publishedAt = new Date(blast.published_at)
+    const title = blast.text.trim() || "Blast"
     let className = "h-entry"
     if (isBefore(publishedAt, subHours(new Date(), 12))) {
         className += " stale"
     }
-    let content = <p class="p-name e-content">{formatTitle(blast)}</p>
+    let content = <p class="p-name e-content">{title}</p>
     if (blast.link) {
         content = (
             <p class="p-name e-content">
-                <a href={blast.link}>{formatTitle(blast)}</a>
+                <a href={blast.link}>{title}</a>
             </p>
         )
     }
