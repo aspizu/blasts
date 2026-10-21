@@ -5,6 +5,15 @@ import type {Context} from "#utils/hono"
 
 const encoder = new TextEncoder()
 const segmenter = new Intl.Segmenter(undefined, {granularity: "grapheme"})
+const quotes = new Map([
+    ["'", "'"],
+    ["‘", "’"],
+])
+const brackets = new Map([
+    [")", "("],
+    ["]", "["],
+    ["}", "{"],
+])
 
 const session = z.object({
     accessJwt: z.string().min(1),
@@ -51,17 +60,33 @@ function _shortenText(text: string) {
     return text
 }
 
+function _trimLink(uri: string, preceding: string | undefined) {
+    const quote = quotes.get(preceding ?? "")
+    if (quote) {
+        const end = uri.lastIndexOf(quote)
+        if (end >= 0) {
+            uri = uri.slice(0, end)
+        }
+    }
+    uri = uri.replace(/[.,!?;:]+$/u, "")
+    while (uri) {
+        const closing = uri.slice(-1)
+        const opening = brackets.get(closing)
+        if (!opening || uri.split(closing).length <= uri.split(opening).length) break
+        uri = uri.slice(0, -1).replace(/[.,!?;:]+$/u, "")
+    }
+    return uri
+}
+
 function _linkFacets(text: string, postText: string) {
     const facets = []
     let end = postText.length
     if (text !== postText) {
         end -= 1
     }
-    for (const match of text.matchAll(/https?:\/\/[^\s<>]+/gu)) {
-        let uri = match[0].replace(/[.,!?;:]+$/u, "")
-        while (uri.endsWith(")") && uri.split(")").length > uri.split("(").length) {
-            uri = uri.slice(0, -1).replace(/[.,!?;:]+$/u, "")
-        }
+    for (const match of text.matchAll(/https?:\/\/[^\s<>"`“”]+/gu)) {
+        const preceding = text.slice(0, match.index).match(/['‘][([{]*$/u)?.[0]?.[0]
+        const uri = _trimLink(match[0], preceding)
         if (!URL.parse(uri)?.hostname || match.index + uri.length > end) continue
         const byteStart = encoder.encode(text.slice(0, match.index)).byteLength
         facets.push({
