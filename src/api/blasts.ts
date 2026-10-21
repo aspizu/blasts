@@ -3,60 +3,56 @@ import {HTTPException} from "hono/http-exception"
 import * as uuid from "uuid"
 import {z} from "zod"
 
-import {sendDiscordWebhook} from "#utils/discord"
+import {publish} from "#services/syndication"
 import hono, {type Context} from "#utils/hono"
 import {fetchTitle} from "#utils/links"
 import type {Blast} from "#utils/models"
 import sql from "#utils/sql"
 
-const body = z.strictObject({
-    text: z.string().min(1),
-})
+const body = z
+    .strictObject({
+        text: z.string().nullable().default(null),
+        link: z
+            .url({protocol: /^(?:https?|gopher|gemini)$/iu, hostname: /./u})
+            .nullable()
+            .default(null),
+    })
+    .refine(({text, link}) => Boolean(text?.trim() || link), {
+        message: "Text or link is required",
+        path: ["text"],
+    })
 
 const params = z.object({id: z.uuidv7()})
 
-export function formatTitle(blast: Blast) {
-    const title = blast.text.trim() || "Blast"
-    if (blast.link) {
-        return `🔗 ${title}`
+async function _resolveText(text: string | null, link: string | null) {
+    if (text?.trim()) {
+        return text
     }
-    return title
+    if (link) {
+        return (await fetchTitle(link)) || link.replace(/^[a-z]+:\/\//iu, "")
+    }
+    throw new HTTPException(400, {message: "Text or link is required"})
 }
 
-export async function parseBlast(text: string) {
-    const [link, ...content] = text.split(/\r?\n/u)
-    if (
-        !link ||
-        !/^(?:https?|gopher|gemini):\/\/\S+$/iu.test(link) ||
-        !URL.parse(link)?.hostname
-    ) {
-        return {text, link: null}
-    }
-    let title = content.join("\n").trim()
-    if (!title) {
-        title = (await fetchTitle(link)) || link.replace(/^[a-z]+:\/\//iu, "")
-    }
-    return {text: title, link}
-}
-
-export async function createBlast(c: Context, text: string, idempotencyKey?: string) {
-    const blast = await parseBlast(text)
+export async function createBlast(
+    c: Context,
+    text: string | null,
+    link: string | null,
+    idempotencyKey?: string,
+) {
+    text = await _resolveText(text, link)
     const now = Date.now()
     const id = uuid.v7({msecs: now})
     const timestamp = new Date(now).toISOString()
     const {meta} = await sql(c)`
         INSERT INTO blasts (id, text, link, published_at, updated_at, idempotency_key)
-        VALUES (${id}, ${blast.text}, ${blast.link}, ${timestamp}, ${timestamp}, ${idempotencyKey})
+        VALUES (${id}, ${text}, ${link}, ${timestamp}, ${timestamp}, ${idempotencyKey})
         ON CONFLICT (idempotency_key) DO NOTHING
     `.run()
     if (meta.changes === 0) {
         return null
     }
-    c.executionCtx.waitUntil(
-        sendDiscordWebhook(c, id, blast.text, blast.link).catch(() => {
-            console.error("Discord webhook delivery failed")
-        }),
-    )
+    publish(c, id, text, link)
     return id
 }
 
@@ -70,8 +66,8 @@ export default hono()
         return c.json({blasts: results})
     })
     .post("/blasts/", zValidator("json", body), async (c) => {
-        const {text} = c.req.valid("json")
-        const id = await createBlast(c, text)
+        const {text, link} = c.req.valid("json")
+        const id = await createBlast(c, text, link)
         if (id === null) {
             throw new HTTPException(500, {message: "Failed to create blast"})
         }
@@ -97,11 +93,12 @@ export default hono()
         zValidator("json", body),
         async (c) => {
             const {id} = c.req.valid("param")
-            const {text} = c.req.valid("json")
-            const content = await parseBlast(text)
+            const content = c.req.valid("json")
+            const {link} = content
+            const text = await _resolveText(content.text, link)
             const blast = await sql(c)`
                 UPDATE blasts
-                SET text = ${content.text}, link = ${content.link}, updated_at = ${new Date()}
+                SET text = ${text}, link = ${link}, updated_at = ${new Date()}
                 WHERE id = ${id}
                 RETURNING id, text, link, published_at, updated_at
             `.first<Blast>()

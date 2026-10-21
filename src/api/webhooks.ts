@@ -15,6 +15,18 @@ const body = z.object({
     channel_post: message.optional(),
 })
 
+function _parseBlast(text: string) {
+    const [link, ...content] = text.split(/\r?\n/u)
+    if (
+        !link ||
+        !/^(?:https?|gopher|gemini):\/\/\S+$/iu.test(link) ||
+        !URL.parse(link)?.hostname
+    ) {
+        return {text, link: null}
+    }
+    return {text: content.join("\n").trim() || null, link}
+}
+
 export default hono().post(
     "/webhooks/telegram",
     zValidator("json", body),
@@ -28,7 +40,8 @@ export default hono().post(
         ) {
             return c.json({ok: true})
         }
-        await createBlast(c, message.text, `telegram:update:${update.update_id}`)
+        const {text, link} = _parseBlast(message.text)
+        await createBlast(c, text, link, `telegram:update:${update.update_id}`)
         return c.json({ok: true})
     },
 )
