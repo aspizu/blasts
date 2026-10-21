@@ -1,6 +1,8 @@
 import type {Syndication} from "#services/syndication"
 import type {Context} from "#utils/hono"
 
+const _segmenter = new Intl.Segmenter(undefined, {granularity: "grapheme"})
+
 function _isConfigured(c: Context) {
     return Boolean(c.env.MASTODON_INSTANCE && c.env.MASTODON_ACCESS_TOKEN)
 }
@@ -18,12 +20,12 @@ function _truncate(text: string, limit: number) {
             length += 23
             remaining = part.slice(url.length)
         }
-        for (const character of remaining) {
-            if (length + character.length > limit) {
+        for (const {segment} of _segmenter.segment(remaining)) {
+            if (length + 1 > limit) {
                 return result
             }
-            result += character
-            length += character.length
+            result += segment
+            length += 1
         }
     }
     return result
@@ -35,11 +37,12 @@ function _format(text: string, externalLink: string | null) {
     let suffixLength = 0
     if (externalLink) {
         suffix = `\n${externalLink}`
-        suffixLength = suffix.length
         if (/^https?:\/\//iu.test(externalLink)) {
             suffixLength = 24
         } else {
-            suffix = suffix.slice(0, 500).replace(/[\uD800-\uDBFF]$/u, "")
+            const segments = Array.from(_segmenter.segment(suffix)).slice(0, 500)
+            suffix = segments.map(({segment}) => segment).join("")
+            suffixLength = segments.length
         }
     }
     content = _truncate(content, Math.max(0, 500 - suffixLength))
